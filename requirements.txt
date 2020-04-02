@@ -1,0 +1,10 @@
+Flask==1.1.1
+imutils==0.5.3
+itsdangerous==1.1.0
+Jinja2==2.11.1
+numpy==1.16.1
+Werkzeug==1.0.0
+gunicorn==19.9.0
+Click==7.0
+dlib==19.16.0
+opencv-python==4.2.0.32
