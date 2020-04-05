@@ -15,12 +15,9 @@ def check():
 def video_focus():
     param = request.get_json()
     url = param["url"]
-    focus = calc_video_focus(url)
-    if focus == -1:
-        return jsonify({
-            "success": False,
-            "message": "Please make sure you're looking at the dot when you start the video."
-        })
+    print(url)
+    focus = calc_video_focus(url, frame_freq=10, threshold=0.07)
+    print(f"Focus: {focus}")
     return jsonify({"score": focus})
 
 

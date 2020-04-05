@@ -1,7 +1,9 @@
 from __future__ import division
+from scipy.spatial import distance as dist
 import os
 import cv2
 import dlib
+from imutils import face_utils
 from .eye import Eye
 from .calibration import Calibration
 
@@ -24,7 +26,8 @@ class GazeTracking(object):
 
         # _predictor is used to get facial landmarks of a given face
         cwd = os.path.abspath(os.path.dirname(__file__))
-        model_path = os.path.abspath(os.path.join(cwd, "trained_models/shape_predictor_68_face_landmarks.dat"))
+        model_path = os.path.abspath(os.path.join(
+            cwd, "trained_models/shape_predictor_68_face_landmarks.dat"))
         self._predictor = dlib.shape_predictor(model_path)
 
     @property
@@ -90,7 +93,7 @@ class GazeTracking(object):
         if self.pupils_located:
             pupil_left = self.eye_left.pupil.x / (self.eye_left.center[0] * 2 - 10)
             pupil_right = self.eye_right.pupil.x / (self.eye_right.center[0] * 2 - 10)
-            return (pupil_left+pupil_right)/2
+            return (pupil_left + pupil_right) / 2
 
     def vertical_ratio(self):
         """Returns a number between 0.0 and 1.0 that indicates the
@@ -100,7 +103,7 @@ class GazeTracking(object):
         if self.pupils_located:
             pupil_left = self.eye_left.pupil.y / (self.eye_left.center[1] * 2 - 10)
             pupil_right = self.eye_right.pupil.y / (self.eye_right.center[1] * 2 - 10)
-            return (pupil_left+pupil_right)/2
+            return (pupil_left + pupil_right) / 2
 
     def y_cords(self):
         """Returns a number between 0.0 and 1.0 that indicates the
@@ -131,7 +134,7 @@ class GazeTracking(object):
         """Returns true if the user closes his eyes"""
         if self.pupils_located:
             blinking_ratio = (self.eye_left.blinking + self.eye_right.blinking) / 2
-            return blinking_ratio > 3.8
+            return blinking_ratio > 4
 
     def annotated_frame(self):
         """Returns the main frame with pupils highlighted"""
@@ -148,3 +151,31 @@ class GazeTracking(object):
             cv2.line(frame, (x_right, y_right - 5), (x_right, y_right + 5), color)
 
         return frame
+
+    def eye_aspect_ratio(self, eye):
+        A = dist.euclidean(eye[1], eye[5])
+        B = dist.euclidean(eye[2], eye[4])
+        C = dist.euclidean(eye[0], eye[3])
+        ear = (A + B) / (2.0 * C)
+        return ear
+
+    def check_blink(self):
+        (lStart, lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
+        (rStart, rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
+        gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        EAR_THRESHOLD = 0.15
+        rects = self._face_detector(gray, 0)
+        for rect in rects:
+            shape = self._predictor(gray, rect)
+            shape = face_utils.shape_to_np(shape)
+            leftEye = shape[lStart:lEnd]
+            rightEye = shape[rStart:rEnd]
+            leftEAR = self.eye_aspect_ratio(leftEye)
+            rightEAR = self.eye_aspect_ratio(rightEye)
+            # average the eye aspect ratio together for both eyes
+            ear = (leftEAR + rightEAR) / 2.0
+
+            if ear < EAR_THRESHOLD:
+                return True
+
+            return False

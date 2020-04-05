@@ -19,22 +19,21 @@ def calc_pupil_deviation(pupil_coords, ideal_coords, frame_dimensions=None):
     return np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
 
-def get_ideal_points(url, debug=False):
+def get_ideal_points(url, ideal_frame=10, debug=False):
     cap = cv2.VideoCapture(url)
     frame_counter = 1
     while cap.isOpened():
         ret, frame = cap.read()
-        if ret and frame_counter % 10 == 0:
+        if ret and frame_counter % ideal_frame == 0:
             frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
             gaze.refresh(frame)
 
-            if not gaze.is_center():
-                return None
-
             if debug:
                 frame = gaze.annotated_frame()
-                plt.imshow(frame)
-                plt.show()
+                cv2.imwrite('./images/ideal_frame.jpg', frame)
+
+            if not gaze.is_center():
+                return None
 
             ideal_left_pupil = gaze.pupil_left_coords()
             ideal_right_pupil = gaze.pupil_right_coords()
@@ -56,7 +55,8 @@ def get_ideal_points(url, debug=False):
 
 
 def calc_video_focus(url, frame_freq=10, threshold=0, debug=False):
-    ideal_points = get_ideal_points(url, debug)
+    ideal_frame = 10
+    ideal_points = get_ideal_points(url, ideal_frame, debug)
     if ideal_points is None:
         return -1
     ideal_left_pupil, ideal_right_pupil, ideal_normal_left, ideal_normal_right = ideal_points
@@ -67,9 +67,22 @@ def calc_video_focus(url, frame_freq=10, threshold=0, debug=False):
     frame_counter = 1
     while cap.isOpened():
         ret, frame = cap.read()
+
+        if frame_counter == ideal_frame:
+            frame_counter += 1
+            continue
+
         if ret and frame_counter % frame_freq == 0:
             frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
             gaze.refresh(frame)
+
+            if gaze.check_blink():
+                if debug:
+                    print(f"==========Frame - {frame_counter}===========")
+                    print("GAZE Blink")
+                    cv2.imwrite(f'./images/f_{frame_counter}_BLINK.jpg', frame)
+                frame_counter += 1
+                continue
 
             if not gaze.is_center():
                 focused.append(0)
@@ -120,8 +133,25 @@ def calc_video_focus(url, frame_freq=10, threshold=0, debug=False):
         if not ret:
             break
 
+    maxi = -1
+    count = 0
+    for i in focused:
+        if i:
+            count += 1
+            continue
+        else:
+            maxi = max(count, maxi)
+            count = 0
+    maxi = max(maxi, count) / len(focused)
     focused = np.array(focused)
-    return np.sqrt((focused ** 2).mean())
+    correct = focused.sum()
+    incorrect = len(focused) - correct
+    print(f"Number of Frame:{len(focused)}, correct: {correct}, Incorrect: {incorrect}")
+    mean = focused.mean()
+    RMS = np.sqrt((focused ** 2).mean())
+    print(f"mean: {mean}")
+    print(f"RMS: {RMS}")
+    return mean
 
 
 if __name__ == "__main__":
@@ -132,15 +162,34 @@ if __name__ == "__main__":
     # Tanish
     # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200326_200607.mp4?alt=media&token=4d83a2c5-028b-4d7f-a05a-cbdb9cfc11de"
     # Shivam 1
-    # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200403_001923.mp4?alt=media&token=80f105e3-540a-4086-a84b-241d0b8db7de"
+    url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200403_001923.mp4?alt=media&token=80f105e3-540a-4086-a84b-241d0b8db7de"
     # Shivam 2
     # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200403_002111.mp4?alt=media&token=8c9a2126-40b6-4bee-8bd2-a6d189a7e629"
+    # Shivam 3
+    # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200403_110252.mp4?alt=media&token=1f04063d-4d90-43d4-aef9-e1c5a2d13762"
     # Utkarsh
     # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200403_002341.mp4?alt=media&token=e522faca-f700-4f82-83d4-401f67945817"
     # Deep
-    url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200403_002627.mp4?alt=media&token=2568434e-ab28-4f02-a9cc-55d5515e2985"
+    # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200403_002627.mp4?alt=media&token=2568434e-ab28-4f02-a9cc-55d5515e2985"
     # Aheli
     # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200403_002745.mp4?alt=media&token=f216032b-1d08-4445-9858-bda358f1fba9"
+
+    # Test cases:
+    # 100%  Getting 95%
+    # Problem: Blinking frames are reducing accuracy
+    # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200403_161141.mp4?alt=media&token=602cedfc-b33f-47ec-a287-6c1e60b54ed2"
+    # 55% BUT 68%
+    # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200403_135416.mp4?alt=media&token=2ce4e983-a47d-479d-9815-2486604f42fa"
+    # 20% BUT 42%
+    # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200403_135637.mp4?alt=media&token=f1e0c98c-1c48-43d9-9102-f9134c8d6df5"
+    # 0% BUT 30%
+    # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200403_140642.mp4?alt=media&token=a91bc5ae-8216-4f31-bac4-ea919e1711ff"
+    # 0 but 16%
+    # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200403_141655.mp4?alt=media&token=3c3699a8-4705-4562-ac8d-0c029e94fa1b"
+    # 0 but 19%
+    # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200403_141452.mp4?alt=media&token=5593d820-c0e7-4620-8e9d-d68299ac9eaa"
+    # 0 but 19
+    # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200403_141904.mp4?alt=media&token=c485a05b-fad6-43c8-9754-4325e0f5e98d"
 
     frame_freq = 10
     threshold = 0.07
