@@ -16,7 +16,7 @@ You need to first install CMAKE to your system before installing the python depe
   ```
 
 ### Installling Python Dependencies
-Recommended: Create a python virtual env for the project before proceding with the following steps
+Recommended: Create a python virtual env for the project before proceeding with the following steps
 ```bash
 pip install requirements.txt
 ```
