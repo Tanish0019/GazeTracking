@@ -13,12 +13,13 @@ def check():
 
 @app.route('/post', methods=['POST'])
 def video_focus():
-    param = request.get_json()
-    url = param["url"]
-    print(url)
-    focus = calc_video_focus(url, frame_freq=10, threshold=0.07)
+    content = request.get_json()
+    url = content["url"]
+    video_id = content["video_id"]
+    print("flask: ", url, video_id)
+    focus = calc_video_focus(url=url, threshold=0.07, video_id=video_id)
     print(f"Focus: {focus}")
-    return jsonify({"score": focus})
+    return jsonify({"score": focus}), 200
 
 
 if __name__ == "__main__":
