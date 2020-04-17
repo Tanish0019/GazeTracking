@@ -1,5 +1,4 @@
-.vscode/
 __pycache__
+.vscode
 images/
-*.pyc
 README.md
