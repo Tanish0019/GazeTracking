@@ -62,35 +62,51 @@ def get_ideal_points(url, debug=False):
     return -1
 
 
-def calc_video_focus(url, threshold=0.7, video_id="dummy_id", debug=False):
+def calc_video_focus(url, threshold=0.073, video_id="dummy_id", debug=False):
+
+    ideal_points_found = False
+    # Check if ideal points already exists(i.e The video is a continuation of another video)
     if video_id in ideal_points_dict:
         ideal_points = ideal_points_dict[video_id]
         print("points already exists:", ideal_points)
-    else:
-        ideal_points = get_ideal_points(url, debug)
-        ideal_points_dict[video_id] = ideal_points
-        print("points don't exist. New points:", ideal_points)
-
-    if ideal_points == -1:
-        return -1
-
-    ideal_left_pupil, ideal_right_pupil, ideal_normal_left, ideal_normal_right = ideal_points
-
-    print(f"Ideal Pupil Points: {ideal_left_pupil}, {ideal_right_pupil}")
-    print(f"Ideal Normalized Points: {ideal_normal_left}, {ideal_normal_right}")
+        if ideal_points == -1:
+            return -1
+        ideal_left_pupil, ideal_right_pupil, ideal_normal_left, ideal_normal_right = ideal_points
 
     cap = cv2.VideoCapture(url)
 
     # check video after every 0.5seconds
     fps = int(np.ceil(cap.get(cv2.CAP_PROP_FPS)))
     frame_freq = fps // 2
+    # Frame till first 2 Seconds of the video
+    max_frame_ideal_points = 4 * frame_freq
+
     print(f"fps: {fps}, frame_freq: {frame_freq}")
+
     focused = []
+
     frame_counter = 1
+
+    if debug:
+        if os.path.exists('./images'):
+            shutil.rmtree('./images')
+        os.mkdir('images')
+
     while cap.isOpened():
         ret, frame = cap.read()
 
+        if not ret:
+            break
+
+        # If ideal points are None: use the first 2 seconds of the video to capture the ideal points
+        # Then continue calculating accuracy from rest of the video
         if ret and frame_counter % frame_freq == 0:
+
+            # The person had his/her eyes closed or the eyes were not detected at the start of the video
+            if not ideal_points_found and frame_counter > max_frame_ideal_points:
+                ideal_points_dict[video_id] = -1
+                return -1
+
             frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
             gaze.refresh(frame)
 
@@ -108,39 +124,53 @@ def calc_video_focus(url, threshold=0.7, video_id="dummy_id", debug=False):
             normal_y = gaze.y_cords()
 
             if None in [left_pupil, right_pupil, normal_x, normal_y]:
-                focused.append(0)
                 if debug:
                     print(f"==========Frame - {frame_counter}===========")
                     print("COORDINATES NONE")
                     cv2.imwrite(f'./images/f_{frame_counter}_NOT_FOUND.jpg', frame)
+
+                if ideal_points_found:
+                    focused.append(0)
+
                 frame_counter += 1
                 continue
 
             normal_left = (normal_x[0], normal_y[0])
             normal_right = (normal_x[1], normal_y[1])
-            left_pupil_deviation = calc_pupil_deviation(normal_left, ideal_normal_left)
-            right_pupil_deviation = calc_pupil_deviation(
-                normal_right, ideal_normal_right)
-            avg_deviaion = (left_pupil_deviation + right_pupil_deviation) / 2
-
-            if (avg_deviaion < threshold):
-                focused.append(1)
+            if not ideal_points_found:
+                ideal_points_found = True
+                ideal_left_pupil = left_pupil
+                ideal_right_pupil = right_pupil
+                ideal_normal_left = normal_left
+                ideal_normal_right = normal_right
+                ideal_points_dict[video_id] = (ideal_left_pupil, ideal_right_pupil,
+                                               ideal_normal_left, ideal_normal_right)
+                if debug:
+                    frame = gaze.annotated_frame()
+                    print(f"==========Frame - {frame_counter}===========")
+                    print(f"Ideal Pupil Points: {ideal_left_pupil}, {ideal_right_pupil}")
+                    print(f"Ideal Normalised Points: {ideal_normal_left}, {ideal_normal_right}")
+                    cv2.imwrite(f'./images/ideal_points_{frame_counter}.jpg', frame)
             else:
-                focused.append(0)
+                left_pupil_deviation = calc_pupil_deviation(normal_left, ideal_normal_left)
+                right_pupil_deviation = calc_pupil_deviation(normal_right, ideal_normal_right)
+                avg_deviaion = (left_pupil_deviation + right_pupil_deviation) / 2
 
-            if debug:
-                frame = gaze.annotated_frame()
-                print(f"==========Frame - {frame_counter}===========")
-                print(f"left pupil: {left_pupil}, right pupil: {right_pupil}")
-                print(f"Ideal Pupil Points: {ideal_left_pupil}, {ideal_right_pupil}")
-                print(f"Deviation Left: {left_pupil_deviation}, Right: {right_pupil_deviation}")
-                print(f"Avg Deviation: {avg_deviaion}")
-                cv2.imwrite(f'./images/f_{frame_counter}_{focused[-1]}.jpg', frame)
+                if (avg_deviaion < threshold):
+                    focused.append(1)
+                else:
+                    focused.append(0)
+
+                if debug:
+                    frame = gaze.annotated_frame()
+                    print(f"==========Frame - {frame_counter}===========")
+                    print(f"left pupil: {left_pupil}, right pupil: {right_pupil}")
+                    print(f"Ideal Pupil Points: {ideal_left_pupil}, {ideal_right_pupil}")
+                    print(f"Deviation Left: {left_pupil_deviation}, Right: {right_pupil_deviation}")
+                    print(f"Avg Deviation: {avg_deviaion}")
+                    cv2.imwrite(f'./images/f_{frame_counter}_{focused[-1]}.jpg', frame)
 
         frame_counter += 1
-
-        if not ret:
-            break
 
     focused = np.array(focused)
     correct = focused.sum()
@@ -153,10 +183,6 @@ def calc_video_focus(url, threshold=0.7, video_id="dummy_id", debug=False):
 
 
 if __name__ == "__main__":
-    if os.path.exists('./images'):
-        shutil.rmtree('./images')
-    os.mkdir('images')
-
     # Tanish
     # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200326_200607.mp4?alt=media&token=4d83a2c5-028b-4d7f-a05a-cbdb9cfc11de"
     # Shivam 1
@@ -196,18 +222,7 @@ if __name__ == "__main__":
     url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200409_162045.mp4?alt=media&token=cb8a4b5b-5056-493f-b099-c5dacf397f6b"
     url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200413_162234.mp4?alt=media&token=dab2c5a2-38ba-48e2-95e7-54a43ce460e1"
     url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1587112714281.mp4?alt=media&token=0bf861b4-5850-4e7a-8849-4c76b3e2a3da"
+
     threshold = 0.073
-    video_focus = calc_video_focus(
-        url=url,
-        threshold=threshold,
-        video_id="video_id",
-        debug=True)
-    print(f"Video focus {video_focus}")
-    # print(ideal_points_dict)
-    # video_focus = calc_video_focus(
-    #     url=url1,
-    #     frame_freq=frame_freq,
-    #     threshold=threshold,
-    #     video_id="video_id",
-    #     debug=False)
+    video_focus = calc_video_focus(url=url, threshold=threshold, video_id="video_id", debug=True)
     print(f"Video focus {video_focus}")
