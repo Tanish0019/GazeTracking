@@ -95,12 +95,12 @@ def calc_video_focus(url, threshold=0.073, video_id="dummy_id", debug=False):
     while cap.isOpened():
         ret, frame = cap.read()
 
-        if not ret:
+        if not ret or frame is None:
             break
 
         # If ideal points are None: use the first 2 seconds of the video to capture the ideal points
         # Then continue calculating accuracy from rest of the video
-        if ret and frame_counter % frame_freq == 0:
+        if frame_counter % frame_freq == 0:
 
             # The person had his/her eyes closed or the eyes were not detected at the start of the video
             if not ideal_points_found and frame_counter > max_frame_ideal_points:
@@ -162,7 +162,7 @@ def calc_video_focus(url, threshold=0.073, video_id="dummy_id", debug=False):
                     focused.append(0)
 
                 if debug:
-                    frame = gaze.annotated_frame()
+                    # frame = gaze.annotated_frame()
                     print(f"==========Frame - {frame_counter}===========")
                     print(f"left pupil: {left_pupil}, right pupil: {right_pupil}")
                     print(f"Ideal Pupil Points: {ideal_left_pupil}, {ideal_right_pupil}")
@@ -172,6 +172,7 @@ def calc_video_focus(url, threshold=0.073, video_id="dummy_id", debug=False):
 
         frame_counter += 1
 
+    cap.release()
     focused = np.array(focused)
     correct = focused.sum()
     incorrect = len(focused) - correct
@@ -223,6 +224,6 @@ if __name__ == "__main__":
     url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200413_162234.mp4?alt=media&token=dab2c5a2-38ba-48e2-95e7-54a43ce460e1"
     url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1587112714281.mp4?alt=media&token=0bf861b4-5850-4e7a-8849-4c76b3e2a3da"
 
-    threshold = 0.073
+    threshold = 0.074
     video_focus = calc_video_focus(url=url, threshold=threshold, video_id="video_id", debug=True)
     print(f"Video focus {video_focus}")
