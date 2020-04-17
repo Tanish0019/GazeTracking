@@ -63,6 +63,9 @@ class GazeTracking(object):
             frame (numpy.ndarray): The frame to analyze
         """
         self.frame = frame
+        self.eye_left = None
+        self.eye_right = None
+        self.calibration = Calibration()
         self._analyze()
 
     def pupil_left_coords(self):
