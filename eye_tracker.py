@@ -147,6 +147,7 @@ def calc_video_focus(url, threshold=0.7, video_id="dummy_id", debug=False):
     incorrect = len(focused) - correct
     mean = focused.mean()
     print(f"Number of Frame:{len(focused)}, correct: {correct}, Incorrect: {incorrect}")
+    print(f"url: {url}")
     print(f"mean: {mean}")
     return mean
 
@@ -193,7 +194,9 @@ if __name__ == "__main__":
     # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200407_194735.mp4?alt=media&token=d8d88a6b-1e82-484f-a350-71ca1dcc145c"
     # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200407_214400.mp4?alt=media&token=6f642531-aee6-4821-ac67-91b6fb57e25e"
     url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200409_162045.mp4?alt=media&token=cb8a4b5b-5056-493f-b099-c5dacf397f6b"
-    threshold = 0.07
+    url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200413_162234.mp4?alt=media&token=dab2c5a2-38ba-48e2-95e7-54a43ce460e1"
+    url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1587112714281.mp4?alt=media&token=0bf861b4-5850-4e7a-8849-4c76b3e2a3da"
+    threshold = 0.073
     video_focus = calc_video_focus(
         url=url,
         threshold=threshold,

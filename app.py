@@ -17,7 +17,7 @@ def video_focus():
     url = content["url"]
     video_id = content["video_id"]
     print("flask: ", url, video_id)
-    focus = calc_video_focus(url=url, threshold=0.07, video_id=video_id)
+    focus = calc_video_focus(url=url, threshold=0.073, video_id=video_id, debug=False)
     print(f"Focus: {focus}")
     return jsonify({"score": focus}), 200
 
