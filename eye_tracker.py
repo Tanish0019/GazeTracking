@@ -3,7 +3,6 @@ import shutil
 import cv2
 import numpy as np
 from gaze_tracking import GazeTracking
-import matplotlib.pyplot as plt
 
 gaze = GazeTracking()
 ideal_points_dict = {}

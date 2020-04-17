@@ -1,0 +1,4 @@
+.vscode/
+__pycache__
+images/
+gaze_tracking/__pycache__
