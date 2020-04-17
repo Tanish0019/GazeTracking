@@ -6,7 +6,6 @@ from gaze_tracking import GazeTracking
 import matplotlib.pyplot as plt
 
 gaze = GazeTracking()
-
 ideal_points_dict = {}
 
 
@@ -62,7 +61,7 @@ def get_ideal_points(url, debug=False):
     return -1
 
 
-def calc_video_focus(url, threshold=0.073, video_id="dummy_id", debug=False):
+def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
 
     ideal_points_found = False
     # Check if ideal points already exists(i.e The video is a continuation of another video)
@@ -224,6 +223,6 @@ if __name__ == "__main__":
     url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_20200413_162234.mp4?alt=media&token=dab2c5a2-38ba-48e2-95e7-54a43ce460e1"
     url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1587112714281.mp4?alt=media&token=0bf861b4-5850-4e7a-8849-4c76b3e2a3da"
 
-    threshold = 0.074
+    threshold = 0.071
     video_focus = calc_video_focus(url=url, threshold=threshold, video_id="video_id", debug=True)
     print(f"Video focus {video_focus}")
