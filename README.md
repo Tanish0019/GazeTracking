@@ -14,6 +14,7 @@ You need to first install CMAKE to your system before installing the python depe
   ```
 
 - Linux
+
   ```bash
   sudo apt-get install build-essential cmake
   sudo apt-get install libopenblas-dev liblapack-dev
