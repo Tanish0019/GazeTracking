@@ -124,6 +124,7 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
             if (avg_deviaion < threshold):
                 focused.append(1)
             else:
+                return frame_counter
                 focused.append(0)
 
             if debug:
@@ -140,14 +141,14 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
         if not ret:
             break
 
-    focused = np.array(focused)
-    correct = focused.sum()
-    incorrect = len(focused) - correct
-    mean = focused.mean()
-    print(f"Number of Frame:{len(focused)}, correct: {correct}, Incorrect: {incorrect}")
-    print(f"url: {url}")
-    print(f"mean: {mean}")
-    return mean
+    # focused = np.array(focused)
+    # correct = focused.sum()
+    # incorrect = len(focused) - correct
+    # mean = focused.mean()
+    # print(f"Number of Frame:{len(focused)}, correct: {correct}, Incorrect: {incorrect}")
+    # print(f"url: {url}")
+    # print(f"mean: {mean}")
+    return frame_counter
 
 
 if __name__ == "__main__":
