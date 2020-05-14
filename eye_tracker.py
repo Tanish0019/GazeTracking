@@ -124,7 +124,7 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
             if (avg_deviaion < threshold):
                 focused.append(1)
             else:
-                return frame_counter
+                return frame_counter//frame_freq
                 focused.append(0)
 
             if debug:
@@ -148,7 +148,7 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
     # print(f"Number of Frame:{len(focused)}, correct: {correct}, Incorrect: {incorrect}")
     # print(f"url: {url}")
     # print(f"mean: {mean}")
-    return frame_counter
+    return frame_counter//frame_freq
 
 
 if __name__ == "__main__":
@@ -197,6 +197,7 @@ if __name__ == "__main__":
     url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1587112714281.mp4?alt=media&token=0bf861b4-5850-4e7a-8849-4c76b3e2a3da"
     # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1587124049503.mp4?alt=media&token=0e77d104-18e6-485e-b763-92944f08de27"
     threshold = 0.071
+    url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1589462033162.mp4?alt=media&token=97139771-2e52-4388-8e48-5786594b6844'
     video_focus = calc_video_focus(url=url, threshold=threshold, video_id="video_id", debug=True)
     print(f"Video focus {video_focus}")
     # print(ideal_points_dict)
