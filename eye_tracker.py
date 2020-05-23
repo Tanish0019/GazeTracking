@@ -70,7 +70,7 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
         print("points don't exist. New points:", ideal_points)
 
     if ideal_points == -1:
-        return -1
+        return (-1,0)
 
     ideal_left_pupil, ideal_right_pupil, ideal_normal_left, ideal_normal_right = ideal_points
 
@@ -81,6 +81,8 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
 
     # check video after every 0.5seconds
     fps = int(np.ceil(cap.get(cv2.CAP_PROP_FPS)))
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    duration = frame_count/fps
     frame_freq = fps // 2
     print(f"fps: {fps}, frame_freq: {frame_freq}")
     focused = []
@@ -124,7 +126,7 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
             if (avg_deviaion < threshold):
                 focused.append(1)
             else:
-                return frame_counter//frame_freq
+                return (frame_counter//frame_freq,duration)
                 focused.append(0)
 
             if debug:
@@ -148,7 +150,7 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
     # print(f"Number of Frame:{len(focused)}, correct: {correct}, Incorrect: {incorrect}")
     # print(f"url: {url}")
     # print(f"mean: {mean}")
-    return frame_counter//frame_freq
+    return (frame_counter//frame_freq,duration)
 
 
 if __name__ == "__main__":
@@ -198,6 +200,9 @@ if __name__ == "__main__":
     # url = "https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1587124049503.mp4?alt=media&token=0e77d104-18e6-485e-b763-92944f08de27"
     threshold = 0.071
     url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1589462033162.mp4?alt=media&token=97139771-2e52-4388-8e48-5786594b6844'
+    url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1589550852617.mp4?alt=media&token=690d82aa-8865-40c2-bb1a-b84cabc04bd8'
+    url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images/VID_1590216612025.mp4?alt=media&token=63b8e2ab-c510-4c68-a1d4-f8c67ef17367'
+    url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1590216612025.mp4?alt=media&token=63b8e2ab-c510-4c68-a1d4-f8c67ef17367'
     video_focus = calc_video_focus(url=url, threshold=threshold, video_id="video_id", debug=True)
     print(f"Video focus {video_focus}")
     # print(ideal_points_dict)

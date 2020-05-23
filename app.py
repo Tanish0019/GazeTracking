@@ -17,14 +17,16 @@ def video_focus():
     url = content["url"]
     video_id = content["video_id"]
     print("flask: ", url, video_id)
-    focused_frames = calc_video_focus(url=url, video_id=video_id, debug=False)
+    focused_frames,duration = calc_video_focus(url=url, video_id=video_id, debug=False)
     if focused_frames<=0:
         message = 'Eyes were not detected. Please follow the instructions properly.'
+        duration_str = ''
     else:
-        time_focused = focused_frames/2
-        print(f"time_focused: {time_focused} seconds")
+        time_focused = focused_frames//2
+        print(f"time_focused: {time_focused} seconds and total duration: {duration}")
         message = f'You were focused for {time_focused} seconds.' 
-    return jsonify({"msg": message}), 200
+        duration_str = 'The video was {duration}s long.'
+    return jsonify({"msg": message,"duration": duration_str}), 200
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get('PORT', 8080)))
