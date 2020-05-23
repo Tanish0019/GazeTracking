@@ -25,7 +25,7 @@ def video_focus():
         time_focused = focused_frames//2
         print(f"time_focused: {time_focused} seconds and total duration: {duration}")
         message = f'You were focused for {time_focused} seconds.' 
-        duration_str = 'The video was {duration}s long.'
+        duration_str = f'The video was {duration}s long.'
     return jsonify({"msg": message,"duration": duration_str}), 200
 
 if __name__ == "__main__":
