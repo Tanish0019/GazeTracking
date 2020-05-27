@@ -122,11 +122,12 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
             right_pupil_deviation = calc_pupil_deviation(
                 normal_right, ideal_normal_right)
             avg_deviaion = (left_pupil_deviation + right_pupil_deviation) / 2
-
+            exit = 0
             if (avg_deviaion < threshold):
                 focused.append(1)
             else:
-                return (frame_counter//frame_freq,duration)
+                print(f'deviation: {avg_deviaion} frame count: ',frame_counter)
+                exit = 1
                 focused.append(0)
 
             if debug:
@@ -137,7 +138,8 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
                 print(f"Deviation Left: {left_pupil_deviation}, Right: {right_pupil_deviation}")
                 print(f"Avg Deviation: {avg_deviaion}")
                 cv2.imwrite(f'./images/f_{frame_counter}_{focused[-1]}.jpg', frame)
-
+            if(exit):
+                return (frame_counter//frame_freq,np.ceil(duration))
         frame_counter += 1
 
         if not ret:
@@ -150,7 +152,8 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
     # print(f"Number of Frame:{len(focused)}, correct: {correct}, Incorrect: {incorrect}")
     # print(f"url: {url}")
     # print(f"mean: {mean}")
-    return (frame_counter//frame_freq,duration)
+    print('frame count: ',frame_counter)
+    return (frame_counter//frame_freq,np.ceil(duration))
 
 
 if __name__ == "__main__":
@@ -202,7 +205,8 @@ if __name__ == "__main__":
     url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1589462033162.mp4?alt=media&token=97139771-2e52-4388-8e48-5786594b6844'
     url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1589550852617.mp4?alt=media&token=690d82aa-8865-40c2-bb1a-b84cabc04bd8'
     url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images/VID_1590216612025.mp4?alt=media&token=63b8e2ab-c510-4c68-a1d4-f8c67ef17367'
-    url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1590216612025.mp4?alt=media&token=63b8e2ab-c510-4c68-a1d4-f8c67ef17367'
+    url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1590557238195.mp4?alt=media&token=948f916c-989b-466d-8948-a09ba6fdd7c1'
+    url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1590557025259.mp4?alt=media&token=7703a513-9e8a-4493-99ef-ca16619e86d5'
     video_focus = calc_video_focus(url=url, threshold=threshold, video_id="video_id", debug=True)
     print(f"Video focus {video_focus}")
     # print(ideal_points_dict)
