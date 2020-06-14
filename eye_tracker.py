@@ -70,7 +70,7 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
         print("points don't exist. New points:", ideal_points)
 
     if ideal_points == -1:
-        return (-1,0)
+        return (-1,-1,0)
 
     ideal_left_pupil, ideal_right_pupil, ideal_normal_left, ideal_normal_right = ideal_points
 
@@ -84,6 +84,8 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     duration = frame_count/fps
     frame_freq = fps // 2
+    first_time = -1
+    prev_sum = 0
     print(f"fps: {fps}, frame_freq: {frame_freq}")
     focused = []
     frame_counter = 1
@@ -106,9 +108,12 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
             right_pupil = gaze.pupil_right_coords()
             normal_x = gaze.x_cords()
             normal_y = gaze.y_cords()
-
+            prev_sum+=0.5
             if None in [left_pupil, right_pupil, normal_x, normal_y]:
                 focused.append(0)
+                # prev_sum+=0.5
+                if(first_time==-1):
+                    first_time = prev_sum
                 if debug:
                     print(f"==========Frame - {frame_counter}===========")
                     print("COORDINATES NONE")
@@ -123,11 +128,14 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
                 normal_right, ideal_normal_right)
             avg_deviaion = (left_pupil_deviation + right_pupil_deviation) / 2
             exit = 0
+            # sum+=0.5
             if (avg_deviaion < threshold):
                 focused.append(1)
             else:
-                print(f'deviation: {avg_deviaion} frame count: ',frame_counter)
-                exit = 1
+                # print(f'deviation: {avg_deviaion} frame count: ',frame_counter)
+                # exit = 1
+                if(first_time==-1):
+                    first_time = prev_sum
                 focused.append(0)
 
             if debug:
@@ -138,8 +146,8 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
                 print(f"Deviation Left: {left_pupil_deviation}, Right: {right_pupil_deviation}")
                 print(f"Avg Deviation: {avg_deviaion}")
                 cv2.imwrite(f'./images/f_{frame_counter}_{focused[-1]}.jpg', frame)
-            if(exit):
-                return (frame_counter//frame_freq,np.ceil(duration))
+            # if(exit):
+                # return (frame_counter//frame_freq,np.ceil(duration))
         frame_counter += 1
 
         if not ret:
@@ -153,7 +161,7 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
     # print(f"url: {url}")
     # print(f"mean: {mean}")
     print('frame count: ',frame_counter)
-    return (frame_counter//frame_freq,np.ceil(duration))
+    return (int(first_time),np.sum(focused)//2,np.ceil(duration))
 
 
 if __name__ == "__main__":
@@ -206,7 +214,9 @@ if __name__ == "__main__":
     url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1589550852617.mp4?alt=media&token=690d82aa-8865-40c2-bb1a-b84cabc04bd8'
     url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images/VID_1590216612025.mp4?alt=media&token=63b8e2ab-c510-4c68-a1d4-f8c67ef17367'
     url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1590557238195.mp4?alt=media&token=948f916c-989b-466d-8948-a09ba6fdd7c1'
-    url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1590557025259.mp4?alt=media&token=7703a513-9e8a-4493-99ef-ca16619e86d5'
+    # url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1590557025259.mp4?alt=media&token=7703a513-9e8a-4493-99ef-ca16619e86d5'
+    # url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1590731611657.mp4?alt=media&token=b9ee5dd0-6b61-48a4-a135-62ae49f69252'
+    # url = 'https://firebasestorage.googleapis.com/v0/b/mcandlefocus.appspot.com/o/images%2FVID_1590730401358.mp4?alt=media&token=24fb3a9d-bd65-430a-91e9-b80e76de1857'
     video_focus = calc_video_focus(url=url, threshold=threshold, video_id="video_id", debug=True)
     print(f"Video focus {video_focus}")
     # print(ideal_points_dict)
