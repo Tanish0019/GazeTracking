@@ -83,7 +83,7 @@ def calc_video_focus(url, threshold=0.071, video_id="dummy_id", debug=False):
     fps = int(np.ceil(cap.get(cv2.CAP_PROP_FPS)))
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     duration = frame_count/fps
-    frame_freq = fps // 2
+    frame_freq = np.ceil(fps / 2)
     first_time = -1
     prev_sum = 0
     print(f"fps: {fps}, frame_freq: {frame_freq}")
